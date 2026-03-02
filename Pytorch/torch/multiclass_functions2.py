@@ -17,11 +17,13 @@ def Train(model, train_DL, val_DL, criterion, optimizer, scheduler,
         current_lr = optimizer.param_groups[0]["lr"]
         print(f"Epoch: {ep+1}, current_LR = {current_lr}")
         
+        # train 데이터셋에 대해 적용
         model.train() # train mode로 전환
-        train_loss, train_acc, _ = loss_epoch(model, train_DL, criterion, optimizer = optimizer)
+        train_loss, train_acc, _ = loss_epoch(model, train_DL, criterion, optimizer = optimizer) # train이므로 optimizer도 같이 전달
         loss_history["train"] += [train_loss]
         acc_history["train"] += [train_acc]
         
+        # validation 데이터셋에 대해 적용
         model.eval() # test mode로 전환
         with torch.no_grad():
             val_loss, val_acc, _ = loss_epoch(model, val_DL, criterion)
@@ -61,7 +63,7 @@ def Test(model,test_DL, criterion):
 def loss_epoch(model, DL, criterion, optimizer = None):
     N = len(DL.dataset) # the number of data
     rloss = 0; rcorrect = 0
-    for x_batch, y_batch in tqdm(DL, leave=False): #tqdm(DL, position=10, leave=False): # position은 줄바꿈 개수
+    for x_batch, y_batch in tqdm(DL, leave=False): #tqdm(DL, position=10, leave=False): # position은 줄바꿈 개수 # 몇 번재 batch 학습인지 알려주는 지표가 됨
         x_batch = x_batch.to(DEVICE)
         y_batch = y_batch.to(DEVICE)
         # inference
@@ -69,7 +71,7 @@ def loss_epoch(model, DL, criterion, optimizer = None):
         # loss
         loss = criterion(y_hat, y_batch)
         # update
-        if optimizer is not None:
+        if optimizer is not None: # train 데이터일 때는 optimizer를 같이 전달하기 때문에 이 if문이 작동하지만, validation 데이터는 train 데이터에서 파생되었기에 optimizer를 같이 전달하지 않도록 주의해서 None 값으로 전달되도록 해주어야 함
             optimizer.zero_grad() # gradient 누적을 막기 위한 초기화
             loss.backward() # backpropagation
             optimizer.step() # weight update
